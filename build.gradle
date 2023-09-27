@@ -8,10 +8,6 @@ plugins {
 group = 'demo'
 version = '0.0.1-SNAPSHOT'
 
-java {
-    sourceCompatibility = '17'
-}
-
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
@@ -28,6 +24,10 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
 }
 
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += "--enable-preview"
+    dependsOn tasks.named('copyVueFiles')
+}
 
 tasks.withType(JavaExec).configureEach {
     jvmArgs += '--enable-preview'
@@ -35,15 +35,12 @@ tasks.withType(JavaExec).configureEach {
 }
 
 
-def nodeVersionProp = "18.17.1"
-def frontendBuild = "build"
-
 frontend {
     packageJsonDirectory = file("${projectDir}/src/web")
     nodeInstallDirectory = file("${projectDir}/src/web/.node")
     nodeDistributionUrlRoot = "https://nodejs.org/dist/"
-    nodeVersion = nodeVersionProp
-    assembleScript = "run ${frontendBuild}"
+    nodeVersion = '18.17.1'
+    assembleScript = 'run build'
 }
 
 /**
