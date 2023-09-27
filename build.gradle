@@ -1,0 +1,63 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.1.4'
+    id 'io.spring.dependency-management' version '1.1.3'
+    id 'org.siouan.frontend-jdk17' version '8.0.0'
+}
+
+group = 'demo'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = '17'
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}
+
+
+tasks.withType(JavaExec).configureEach {
+    jvmArgs += '--enable-preview'
+    dependsOn tasks.named('copyVueFiles')
+}
+
+
+def nodeVersionProp = "18.17.1"
+def frontendBuild = "build"
+
+frontend {
+    packageJsonDirectory = file("${projectDir}/src/web")
+    nodeInstallDirectory = file("${projectDir}/src/web/.node")
+    nodeDistributionUrlRoot = "https://nodejs.org/dist/"
+    nodeVersion = nodeVersionProp
+    assembleScript = "run ${frontendBuild}"
+}
+
+/**
+ * Just the gradle frontend plugin, do not copy the files to jar, so, we need to do that.
+ * Copy vue frontend files to inside the springboot jar /resources/main/static directory
+ */
+tasks.register('copyVueFiles') {
+    doLast {
+        println "Cleaning previous static folder"
+        delete("${buildDir}/resources/main/static")
+        copy {
+            println "copying values from ${projectDir}/src/web/dist to ${buildDir}/resources/main/static"
+            from "${projectDir}/src/web/dist"
+            into "${buildDir}/resources/main/static"
+        }
+    }
+}
